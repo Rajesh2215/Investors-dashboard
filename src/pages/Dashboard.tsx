@@ -11,6 +11,7 @@ import HoldingsList from '../components/HoldingsList'
 import AssetCard from '../components/AssetCard'
 import TradeModal from '../components/TradeModal'
 import TransactionsList from '../components/TransactionsList'
+import NavHistoryChart from '../components/NavHistoryChart'
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null)
@@ -28,7 +29,15 @@ const Dashboard = () => {
   const eventSourceRef = useRef<{ close: () => void } | null>(null)
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
     const userData = localStorage.getItem('user')
+    
+    // Check if token exists
+    if (!token) {
+      navigate('/login')
+      return
+    }
+    
     if (userData) {
       const parsedUser = JSON.parse(userData)
       setUser(parsedUser)
@@ -190,6 +199,11 @@ const Dashboard = () => {
         {/* Transaction History Section */}
         <div className="mt-6">
           <TransactionsList transactions={transactions} loading={transactionsLoading} />
+        </div>
+
+        {/* NAV History Section */}
+        <div className="mt-6">
+          <NavHistoryChart />
         </div>
 
         {/* Available Assets Section */}

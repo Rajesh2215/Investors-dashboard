@@ -1,15 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { registerUser, type RegisterData } from '../api/modules/auth'
 
 const Register = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<RegisterData>({
     name: '',
     email: '',
     password: ''
   })
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      navigate('/dashboard')
+    }
+  }, [navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

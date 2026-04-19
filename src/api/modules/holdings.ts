@@ -28,5 +28,14 @@ export const getHoldings = async (): Promise<Holding[]> => {
       'Authorization': `Bearer ${token}`
     }
   })
+  
+  if (response.status === 401 || response.status === 403) {
+    // Token expired or invalid, clear storage and redirect
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Token expired');
+  }
+  
   return response.data
 }

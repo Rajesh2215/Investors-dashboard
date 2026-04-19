@@ -70,6 +70,13 @@ export const streamNavUpdates = (
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          // Token expired or invalid, clear storage and redirect
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return;
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
