@@ -8,6 +8,22 @@ export interface NavData {
     symbol: string;
     price: number;
   }>;
+  type?: string;
+  direction?: 'above' | 'below';
+  thresholdValue?: number;
+  currentNav?: number;
+  alerts?: Array<{
+    type: string;
+    userId: string;
+    thresholdValue: number;
+    direction: 'above' | 'below';
+    nav: number;
+    prices?: Array<{
+      symbol: string;
+      price: number;
+    }>;
+    timestamp: string;
+  }>;
 }
 
 export interface NavHistoryItem {
@@ -26,13 +42,11 @@ export interface NavHistoryResponse {
 
 export const getCurrentNav = async (): Promise<NavData> => {
   const token = localStorage.getItem("token");
-  console.log("🚀 ~ getCurrentNav ~ token:", token);
   const response = await api.get<NavData>("/nav", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  console.log("response", response);
   return response.data;
 };
 
@@ -102,6 +116,8 @@ export const streamNavUpdates = (
               const data = JSON.parse(line.slice(6));
               if (data.type === "nav") {
                 callback(data);
+              } else if (data.type === "alert") {
+                callback(data); // Pass alert data to callback
               }
             } catch (e) {
               console.error('Error parsing SSE data:', e);
