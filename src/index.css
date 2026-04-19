@@ -53,10 +53,9 @@
 }
 
 #root {
-  width: 1126px;
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
   border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
@@ -68,14 +67,20 @@ body {
   margin: 0;
 }
 
-h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
   color: var(--text-h);
 }
 
-h1 {
+/* Allow Tailwind to override h1 styles */
+h1:not([class*="text-"]) {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1:not([class*="text-"]) {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
