@@ -5,20 +5,24 @@ import { getCurrentNav, streamNavUpdates } from '../api/modules/nav'
 import { getHoldings, type Holding } from '../api/modules/holdings'
 import { getAssets, type Asset } from '../api/modules/assets'
 import { executeTrade } from '../api/modules/trade'
+import { getTransactions, type TransactionWithAsset } from '../api/modules/transactions'
 import NavCard from '../components/NavCard'
 import HoldingsList from '../components/HoldingsList'
 import AssetCard from '../components/AssetCard'
 import TradeModal from '../components/TradeModal'
+import TransactionsList from '../components/TransactionsList'
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null)
   const [nav, setNav] = useState<number>(0)
   const [holdings, setHoldings] = useState<Holding[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
+  const [transactions, setTransactions] = useState<TransactionWithAsset[]>([])
   const [cryptoPrices, setCryptoPrices] = useState<Array<{ symbol: string; price: number }>>([])
   const [navLoading, setNavLoading] = useState(true)
   const [holdingsLoading, setHoldingsLoading] = useState(true)
   const [assetsLoading, setAssetsLoading] = useState(true)
+  const [transactionsLoading, setTransactionsLoading] = useState(true)
   const [tradeModal, setTradeModal] = useState<{ asset: Asset; type: 'BUY' | 'SELL' } | null>(null)
   const navigate = useNavigate()
   const eventSourceRef = useRef<{ close: () => void } | null>(null)
@@ -63,6 +67,12 @@ const Dashboard = () => {
       setAssets(assetsData)
       setAssetsLoading(false)
 
+      // Fetch transactions
+      setTransactionsLoading(true)
+      const transactionsData = await getTransactions()
+      setTransactions(transactionsData)
+      setTransactionsLoading(false)
+
       // Setup NAV streaming
       if (eventSourceRef.current) {
         eventSourceRef.current.close()
@@ -81,6 +91,7 @@ const Dashboard = () => {
       setNavLoading(false)
       setHoldingsLoading(false)
       setAssetsLoading(false)
+      setTransactionsLoading(false)
     }
   }
 
@@ -174,6 +185,11 @@ const Dashboard = () => {
         {/* Holdings List - Full width */}
         <div className="mt-6">
           <HoldingsList holdings={holdings} loading={holdingsLoading} onSell={handleSell} cryptoPrices={cryptoPrices} />
+        </div>
+
+        {/* Transaction History Section */}
+        <div className="mt-6">
+          <TransactionsList transactions={transactions} loading={transactionsLoading} />
         </div>
 
         {/* Available Assets Section */}
