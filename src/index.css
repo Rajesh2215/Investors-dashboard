@@ -67,7 +67,7 @@ body {
   margin: 0;
 }
 
-h2 {
+h2:not([class*="text-"]) {
   font-family: var(--heading);
   font-weight: 500;
   color: var(--text-h);
@@ -89,7 +89,7 @@ h1:not([class*="text-"]) {
     margin: 20px 0;
   }
 }
-h2 {
+h2:not([class*="text-"]) {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { type User } from "../api/modules/auth";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { type User, logoutUser } from "../api/modules/auth";
 import { getCurrentNav, streamNavUpdates } from "../api/modules/nav";
 import { getHoldings, type Holding } from "../api/modules/holdings";
 import { getAssets, type Asset } from "../api/modules/assets";
@@ -73,36 +75,36 @@ const Dashboard = () => {
 
   const fetchDashboardData = async (userId: string) => {
     try {
-      // Fetch current NAV
+      // Set all loading states to true
       setNavLoading(true);
-      const navData = await getCurrentNav();
-      setNav(navData.nav);
-      setNavLoading(false);
-
-      // Fetch holdings
       setHoldingsLoading(true);
-      const holdingsData = await getHoldings();
-      setHoldings(holdingsData);
-      setHoldingsLoading(false);
-
-      // Fetch assets
       setAssetsLoading(true);
-      const assetsData = await getAssets();
-      setAssets(assetsData);
-      setAssetsLoading(false);
-
-      // Fetch transactions
       setTransactionsLoading(true);
-      const transactionsData = await getTransactions();
-      setTransactions(transactionsData);
-      setTransactionsLoading(false);
-
-      // Fetch alerts for display (but notifications only when triggered)
       setAlertsLoading(true);
-      const alertsData = await getAlerts(userId);
+
+      // Fetch all data in parallel
+      const [navData, holdingsData, assetsData, transactionsData, alertsData] = await Promise.all([
+        getCurrentNav(),
+        getHoldings(),
+        getAssets(),
+        getTransactions(),
+        getAlerts(userId)
+      ]);
+
+      // Set all states at once
+      setNav(navData.nav);
+      setHoldings(holdingsData);
+      setAssets(assetsData);
+      setTransactions(transactionsData);
       // Show all alerts in list, but filter out already triggered ones
       const displayAlerts = alertsData.alerts.filter(alert => alert.lastState !== 'triggered');
       setAlerts(displayAlerts);
+
+      // Set all loading states to false
+      setNavLoading(false);
+      setHoldingsLoading(false);
+      setAssetsLoading(false);
+      setTransactionsLoading(false);
       setAlertsLoading(false);
 
       // Setup NAV streaming
@@ -200,24 +202,38 @@ const Dashboard = () => {
         quantity,
         type: tradeModal.type,
       });
-
+      
       // Refresh data after trade
       if (user) {
         await fetchDashboardData(user._id);
       }
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Trade failed. Please try again.';
+      console.log('error.response.data.message', error.response?.data?.message)
       console.error("Trade failed:", error);
+      
+      // Show error toast
+      toast.error(errorMessage);
+      
       throw error;
     }
   };
 
-  const handleLogout = () => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
+  const handleLogout = async () => {
+    try {
+      // Call the logout API
+      await logoutUser();
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    } finally {
+      // Always cleanup local data and navigate, even if API call fails
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
     }
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
   };
 
   if (!user) {
@@ -296,12 +312,21 @@ const Dashboard = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {assets.map((asset) => (
-                  <AssetCard key={asset._id} asset={asset} onBuy={handleBuy} />
+                  <AssetCard key={asset._id} asset={asset} onBuy={handleBuy} cryptoPrices={cryptoPrices} />
                 ))}
               </div>
             )}
           </div>
         </div>
+
+        {tradeModal && (
+          <TradeModal
+            asset={tradeModal.asset}
+            type={tradeModal.type}
+            onClose={() => setTradeModal(null)}
+            onConfirm={handleTradeConfirm}
+          />
+        )}
 
         {/* Transaction History Section */}
         <div className="mt-6">
@@ -323,13 +348,31 @@ const Dashboard = () => {
               <AlertForm onAlertCreated={handleAlertCreate} />
             </div>
             <div>
-              <AlertsList alerts={alerts} loading={alertsLoading} onDeleteAlert={handleDeleteAlert} />
+              <AlertsList
+                alerts={alerts}
+                loading={alertsLoading}
+                onDeleteAlert={handleDeleteAlert}
+              />
             </div>
           </div>
         </div>
 
         {/* Alert Notifications */}
         <AlertNotifications alerts={streamAlerts} />
+        
+        {/* Toast Container */}
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </main>
     </div>
   );

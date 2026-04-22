@@ -53,3 +53,12 @@ export const getUsers = async () => {
   const response = await api.get<User[]>('/users')
   return response.data
 }
+
+export const logoutUser = async (): Promise<void> => {
+  const token = localStorage.getItem('token')
+  await api.post('/users/logout', {}, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+}

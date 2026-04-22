@@ -3,9 +3,12 @@ import { type Asset } from '../api/modules/assets'
 interface AssetCardProps {
   asset: Asset
   onBuy: (asset: Asset) => void
+  cryptoPrices?: Array<{ symbol: string; price: number }>
 }
 
-const AssetCard = ({ asset, onBuy }: AssetCardProps) => {
+const AssetCard = ({ asset, onBuy, cryptoPrices }: AssetCardProps) => {
+  const currentPrice = cryptoPrices?.find(price => price.symbol === asset.baseCrypto)?.price;
+  
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
       <div className="flex justify-between items-start mb-4">
@@ -18,6 +21,11 @@ const AssetCard = ({ asset, onBuy }: AssetCardProps) => {
           </p>
         </div>
         <div className="text-right">
+          {currentPrice && (
+            <p className="text-lg font-semibold text-green-600">
+              ${currentPrice.toLocaleString()}
+            </p>
+          )}
           <p className="text-xs text-gray-500">
             Base: {asset.baseCrypto}
           </p>

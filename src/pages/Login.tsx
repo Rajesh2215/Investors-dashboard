@@ -100,6 +100,18 @@ const Login = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </div>
+
+          <div className="text-center">
+            <span className="text-sm text-gray-600">
+              New User?{' '}
+              <a 
+                href="/register" 
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Register
+              </a>
+            </span>
+          </div>
         </form>
       </div>
     </div>
